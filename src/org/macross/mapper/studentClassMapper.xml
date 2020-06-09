@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.macross.mapper.StudentClassMapper">
+    <!--    数据库控制台命令路径C:\Users\MACROSS\.IntelliJIdea2019.3\config\consoles\db\d6fcc083-e8c4-4251-afc2-e9f4dbc2e101-->
+    <!--  后续通过  namespace.id-->
+    <!--parameterType:输入参数的类型
+    resultType：查询返回结果值的类型  ，返回类型  -->
+    <select id="queryStudentByClassid" parameterType="int" resultType="student" >
+        select * from student where classid = #{classid}
+    </select>
+
+</mapper>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.macross.mapper.StudentMapper">
+<!--    数据库控制台命令路径C:\Users\MACROSS\.IntelliJIdea2019.3\config\consoles\db\d6fcc083-e8c4-4251-afc2-e9f4dbc2e101-->
+    <!--  后续通过  namespace.id-->
+    <!--parameterType:输入参数的类型
+    resultType：查询返回结果值的类型  ，返回类型  -->
+    <!--声明namespace开启二级缓存
+    <cache/>-->
+    <cache type="org.mybatis.caches.ehcache.EhcacheCache"></cache>
+    <resultMap id="studentResultaddress" type="student">
+        <!--分为主键id和非主键result-->
+        <id property="stuNo" column="stuno"/>
+        <result property="stuName" column="stuname"/>
+        <result property="stuAge" column="stuage"/>
+        <result property="graName" column="graname"/>
+        <result property="stuSex" column="stusex" javaType="boolean" jdbcType="INTEGER"/>
+        <result property="address.homeAddress" column="homeaddress"/>
+        <result property="address.schoolAddress" column="schooladdress"/>
+    </resultMap>
+
+    <resultMap id="Student_card_LazyLoad_map" type="Student">
+        <!--分为主键id和非主键result-->
+<!--        延迟加载不需要配 id 和 result-->
+<!--        <id property="stuNo" column="stuno"/>-->
+<!--        <result property="stuName" column="stuname"/>-->
+<!--        <result property="stuAge" column="stuage"/>-->
+<!--        <result property="graName" column="graname"/>-->
+<!--        <result property="stuSex" column="stusex" javaType="boolean" jdbcType="INTEGER"/>-->
+<!--        <result property="address.homeAddress" column="homeaddress"/>-->
+<!--        <result property="address.schoolAddress" column="schooladdress"/>-->
+        <!-- 一对一-->
+        <association property="card" javaType="StudentCard" select="org.macross.mapper.StudentCardMapper.queryCardById" column="cardid">
+            <id property="cardId" column="cardid"/>
+            <result property="cardInfo" column="cardInfo"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="studentClass" type="StudentClass">
+        <id property="classId" column="classid"/>
+        <result property="className" column="classname"/>
+        <collection property="students" ofType="student" select="org.macross.mapper.StudentClassMapper.queryStudentByClassid" column="classid">
+<!--            <id property="stuNo" column="stuno"/>-->
+<!--            <result property="stuName" column="stuname"/>-->
+<!--            <result property="stuAge" column="stuage"/>-->
+        </collection>
+    </resultMap>
+
+    <select id="queryStudentByStuno" resultType="Student" parameterType="int">
+        select * from student where stuno = #{stuno}
+    </select>
+
+    <select id="queryAllStudents" resultType="Student">
+        select * from student
+    </select>
+
+    <select id="queryStudentByStunoWithConverter" resultMap="studentResultaddress" parameterType="INTEGER">
+        select * from student where stuno = #{stuno}
+    </select>
+
+
+    <select id="queryStudentByaddress" resultMap="studentResultaddress" parameterType="student">
+        select * from student where homeaddress = #{address.homeAddress} or schooladdress = '${address.schoolAddress}'
+    </select>
+
+
+    <select id="queryCountByGradeWithProcedure" statementType="CALLABLE" parameterType="HashMap">
+        {CALL queryCountByGradeWithProcedure(#{graName,jdbcType=VARCHAR,mode=IN},#{scount,jdbcType=INTEGER,mode=OUT})}
+    </select>
+
+    <select id="queryAllStudentsOutByHashMap" resultType="HashMap" >
+        select stuno "no",stuname "name" from student
+    </select>
+
+    <select id="queryStudentBySnoOrSname" resultMap="studentResultaddress" parameterType="Student">
+        select * from student where 1=1
+            <if test="stuNo!=null and stuNo !=0">and stuno=#{stuNo}</if>
+            <if test="stuName!=null and stuName !=''">and stuname=#{stuName}</if>
+    </select>
+
+    <select id="queryStudentInStuno" resultMap="studentResultaddress" parameterType="Object[]">
+        select * from student
+        <where>
+        <if test="array!=null and array.length>0">
+            <foreach collection="array" open="stuno in(" close=")" separator="," item="student" >
+                #{student.stuNo}
+            </foreach>
+        </if>
+        </where>
+    </select>
+
+    <insert id="addStudent" parameterType="Student">
+        insert into student(stuno,stuname,stuage,graname) values(#{stuNo},#{stuName},#{stuAge},#{graName})
+    </insert>
+
+    <insert id="addStudentWithConverter" parameterType="Student">
+        insert into student(stuno,stuname,stuage,graname,stuSex) values(#{stuNo},#{stuName},#{stuAge},#{graName},#{stuSex,javaType=boolean,jdbcType=INTEGER})
+    </insert>
+
+    <delete id="deleteStudentByStuno" parameterType="int">
+        delete from student where stuno= #{stuno}
+    </delete>
+
+    <update id="updateStudentByStuno" parameterType="Student">
+        update student set stuname= #{stuName} ,stuage = #{stuAge} ,graname=#{graName} where stuno = #{stuNo}
+    </update>
+
+<!--    关联查询-->
+    <select id="queryStudentWithcardId" resultMap="Student_card_LazyLoad_map" parameterType="int">
+        select * from student  where student.stuno=#{stuno}
+    </select>
+
+<!--    <select id="queryStudentClass" parameterType="int" resultMap="studentClass">-->
+<!--        select * from student inner join studentclass c on student.classid=c.classid where c.classid=#{classId}-->
+<!--    </select>-->
+
+    <select id="queryStudentClass" parameterType="int" resultMap="studentClass">
+        select * from  studentclass c where c.classid=#{classId}
+    </select>
+</mapper>
